@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#111827">
+<title>سجل الحجوزات والمواعيد</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827}
+header{background:#111827;color:white;padding:18px 14px;position:sticky;top:0;z-index:5}
+h1{font-size:20px;margin:0 0 12px}
+input,select,button,textarea{font:inherit;border-radius:10px;border:1px solid #d1d5db;padding:11px}
+#search{width:100%}
+main{padding:12px;max-width:700px;margin:auto}
+.card{background:white;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #0001}
+.card h3{margin:0 0 10px;font-size:17px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.label{font-weight:bold;color:#4b5563}
+.actions{display:flex;gap:8px;margin-top:12px}
+button{border:0;background:#111827;color:white;cursor:pointer}
+button.add{position:fixed;bottom:20px;left:20px;width:56px;height:56px;border-radius:50%;font-size:28px}
+button.danger{background:#b91c1c}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:10;padding:15px;overflow:auto}
+.box{background:white;border-radius:16px;padding:16px;max-width:650px;margin:20px auto}
+.field{margin-bottom:10px} .field label{display:block;margin-bottom:5px;font-weight:bold}
+.field input,.field textarea{width:100%}
+.stats{font-size:13px;margin-top:8px;color:#d1d5db}
+</style></head>
+<body>
+<header>
+<h1>📅 سجل الحجوزات والمواعيد</h1>
+<input id="search" placeholder="🔍 ابحث بالاسم أو الهاتف أو أي معلومة...">
+<div class="stats" id="stats"></div>
+</header>
+<main id="list"></main>
+<button class="add" onclick="openForm()">+</button>
+
+<div class="modal" id="modal">
+<div class="box">
+<h2 id="formTitle">إضافة حجز</h2>
+<form id="form"></form>
+<div class="actions">
+<button type="button" onclick="saveRecord()">حفظ</button>
+<button type="button" onclick="closeForm()">إلغاء</button>
+</div>
+</div></div>
+
+<script>
+const columns=["رمز الحجز", "الاسم الثلاثي للعميل", "العمر", "الجنس", "رقم الجوال", "رقم الهوية/الملف", "تاريخ الموعد", "توقيت الموعد", "حالة الحضور", "وقت تسجيل الحضور", "نوع الخدمة", "الأخصائي", "الرسوم", "حالة الدفع", "ملاحظات"];
+let data=[{"رمز الحجز": "BK-2026-101", "الاسم الثلاثي للعميل": "سلطان عبدالعزيز الدوسري", "العمر": 34, "الجنس": "ذكر", "رقم الجوال": 551234567, "رقم الهوية/الملف": 1098234512, "تاريخ الموعد": "2026-10-07", "توقيت الموعد": "09:00", "حالة الحضور": "حاضر (تم الحضور)", "وقت تسجيل الحضور": "2026-10-07 08:55", "نوع الخدمة": "استشارة متقدمة وفحص شامل", "الأخصائي": "د. خالد بن فيصل المنصور", "الرسوم": 350, "حالة الدفع": "مدفوع بالكامل", "ملاحظات": "حضر العميل قبل الموعد بـ 5 دقائق، وتم إنهاء الاستشارة بنجاح."}, {"رمز الحجز": "BK-2026-102", "الاسم الثلاثي للعميل": "نورة فهد الشمري", "العمر": 27, "الجنس": "أنثى", "رقم الجوال": 549876543, "رقم الهوية/الملف": 1102948571, "تاريخ الموعد": "2026-10-07", "توقيت الموعد": "09:45", "حالة الحضور": "حاضر (تم الحضور)", "وقت تسجيل الحضور": "2026-10-07 09:40", "نوع الخدمة": "جلسة متابعة دورية وتقييم", "الأخصائي": "أ. ديمة سليمان الرشيد", "الرسوم": 250, "حالة الدفع": "مدفوع بالكامل", "ملاحظات": "تم تثبيت برنامج المتابعة القادم ومراجعة مؤشرات الأداء."}, {"رمز الحجز": "BK-2026-103", "الاسم الثلاثي للعميل": "محمد إبراهيم القحطاني", "العمر": 48, "الجنس": "ذكر", "رقم الجوال": 503344556, "رقم الهوية/الملف": 1074567890, "تاريخ الموعد": "2026-10-07", "توقيت الموعد": "10:30", "حالة الحضور": "لم يحضر (غياب)", "وقت تسجيل الحضور": "-", "نوع الخدمة": "جلسة استشارية متخصصة", "الأخصائي": "د. خالد بن فيصل المنصور", "الرسوم": 300, "حالة الدفع": "غير مدفوع", "ملاحظات": "تخلف العميل عن الحضور دون إشعار مسبق."}, {"رمز الحجز": "BK-2026-104", "الاسم الثلاثي للعميل": "هند عبدالله الغامدي", "العمر": 39, "الجنس": "أنثى", "رقم الجوال": 567788990, "رقم الهوية/الملف": 1088765432, "تاريخ الموعد": "2026-10-07", "توقيت الموعد": "11:15", "حالة الحضور": "قيد الانتظار (مجدول)", "وقت تسجيل الحضور": "-", "نوع الخدمة": "تخطيط برنامج وتحديث خطة العمل", "الأخصائي": "أ. ديمة سليمان الرشيد", "الرسوم": 200, "حالة الدفع": "مدفوع بالكامل", "ملاحظات": "العميل في الطريق وموعد مؤكد."}, {"رمز الحجز": "BK-2026-105", "الاسم الثلاثي للعميل": "عبدالرحمن صالح الحربي", "العمر": 52, "الجنس": "ذكر", "رقم الجوال": 534455667, "رقم الهوية/الملف": 1065432198, "تاريخ الموعد": "2026-10-07", "توقيت الموعد": "12:00", "حالة الحضور": "قيد الانتظار (مجدول)", "وقت تسجيل الحضور": "-", "نوع الخدمة": "كشف عاجل وتشخيص فوري", "الأخصائي": "د. عمر طارق الخالدي", "الرسوم": 450, "حالة الدفع": "مدفوع جزئياً", "ملاحظات": "أولوية عاجلة."}, {"رمز الحجز": "BK-2026-106", "الاسم الثلاثي للعميل": "ريم خالد العتيبي", "العمر": 23, "الجنس": "أنثى", "رقم الجوال": 581122334, "رقم الهوية/الملف": 1119876543, "تاريخ الموعد": "2026-10-07", "توقيت الموعد": "13:30", "حالة الحضور": "مؤجل لموعد آخر", "وقت تسجيل الحضور": "-", "نوع الخدمة": "استشارة عامة وجلسة أولى", "الأخصائي": "د. خالد بن فيصل المنصور", "الرسوم": 250, "حالة الدفع": "غير مدفوع", "ملاحظات": "تأجيل بسبب سفر مفاجئ."}];
+let editIndex=-1;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+function render(){
+ const q=document.getElementById('search').value.trim().toLowerCase();
+ const list=document.getElementById('list');
+ const filtered=data.map((r,i)=>({r,i})).filter(x=>Object.values(x.r).join(' ').toLowerCase().includes(q));
+ document.getElementById('stats').textContent=`إجمالي السجلات: ${data.length} — الظاهرة: ${filtered.length}`;
+ list.innerHTML=filtered.map(x=>{
+   const r=x.r;
+   let title=r[columns[0]]||'حجز بدون اسم';
+   let fields=columns.slice(1).map(c=>r[c]?`<div class="row"><span class="label">${esc(c)}:</span> <span>${esc(r[c])}</span></div>`:'').join('');
+   return `<div class="card"><h3>${esc(title)}</h3>${fields}
+   <div class="actions"><button onclick="openForm(${x.i})">✏️ تعديل</button>
+   <button class="danger" onclick="removeRecord(${x.i})">🗑️ حذف</button></div></div>`;
+ }).join('') || '<div class="card">لا توجد نتائج.</div>';
+}
+
+function openForm(i=-1){
+ editIndex=i;
+ document.getElementById('formTitle').textContent=i<0?'إضافة حجز':'تعديل الحجز';
+ document.getElementById('form').innerHTML=columns.map((c,n)=>{
+   let v=i<0?'':data[i][c];
+   return `<div class="field"><label>${esc(c)}</label><input id="f${n}" value="${esc(v)}"></div>`;
+ }).join('');
+ document.getElementById('modal').style.display='block';
+}
+function closeForm(){document.getElementById('modal').style.display='none'}
+function saveRecord(){
+ let r={};
+ columns.forEach((c,n)=>r[c]=document.getElementById('f'+n).value);
+ if(editIndex<0)data.unshift(r);else data[editIndex]=r;
+ localStorage.setItem('appointments',JSON.stringify(data));
+ closeForm();render();
+}
+function removeRecord(i){
+ if(confirm('متأكد تريد حذف هذا الحجز؟')){data.splice(i,1);localStorage.setItem('appointments',JSON.stringify(data));render();}
+}
+const saved=localStorage.getItem('appointments');
+if(saved){try{data=JSON.parse(saved)}catch(e){}}
+document.getElementById('search').addEventListener('input',render);
+render();
+</script>
+</body></html>
